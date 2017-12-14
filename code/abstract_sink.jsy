@@ -1,0 +1,9 @@
+const abstract_sink_interface = @{}
+  by_msgid: new Map()
+
+  json_unpack(sz) :: return JSON.parse(sz)
+  recvCtrl(msg, info) ::
+  recvMsg(msg, info) :: return @{} msg, info
+  recvStream(msg, info) ::
+  recvStreamData(rstream, info) ::
+

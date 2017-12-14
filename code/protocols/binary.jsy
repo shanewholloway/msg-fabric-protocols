@@ -1,6 +1,5 @@
 export default function binary_protocol(shared) ::
-  const {createMultipart, createStream} = shared
-  const {pack_utf8, unpack_utf8} = shared.packetParser
+  const {stateFor, createMultipart, createStream} = shared
   const {asBuffer} = shared.packetParser
   return @{}
     packBody: asBuffer
@@ -13,7 +12,7 @@ export default function binary_protocol(shared) ::
 
     multipart: @{}
       t_recv(pkt, sink) ::
-        const state = sink.stateFor @ pkt, createMultipart
+        const state = stateFor @ pkt, sink, createMultipart
         const msg = state.feed(pkt)
         if undefined !== msg ::
           return sink.recvMsg @ msg, state.info
@@ -21,7 +20,7 @@ export default function binary_protocol(shared) ::
     streaming: @{}
       mode: 'bytes'
       t_recv(pkt, sink) ::
-        const state = sink.stateFor @ pkt, createStream
+        const state = stateFor @ pkt, sink, createStream
         const msg = state.feed(pkt, pkt_buffer)
         if undefined !== msg ::
           return sink.recvMsg @ msg, state.info

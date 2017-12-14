@@ -3,7 +3,7 @@ export default function(packetParser, shared) ::
   return @{} createMultipart
 
 
-  function createMultipart(pkt, sink, msgid) ::
+  function createMultipart(pkt, sink, deleteState) ::
     let parts = [], fin = false
     return @{} feed, info: pkt.info
 
@@ -15,7 +15,7 @@ export default function(packetParser, shared) ::
       if ! fin :: return
       if parts.includes @ undefined :: return
 
-      sink.deleteStateFor(msgid)
+      deleteState()
 
       const res = concatBuffers(parts)
       parts = null

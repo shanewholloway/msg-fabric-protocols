@@ -8,7 +8,7 @@ import streaming from './streaming.jsy'
 import transport from './transport.jsy'
 
 export default function init_shared(packetParser, options) ::
-  const shared = Object.assign @ {packetParser}, options
+  const shared = Object.assign @ {packetParser, stateFor}, options
 
   Object.assign @ shared,
     multipart @ packetParser, shared
@@ -16,3 +16,14 @@ export default function init_shared(packetParser, options) ::
     transport @ packetParser, shared
 
   return shared
+
+function stateFor(pkt, sink, createState) ::
+  const {by_msgid} = sink, {msgid} = pkt.info
+  let state = by_msgid.get(msgid)
+  if undefined === state ::
+    if ! msgid :: throw new Error @ `Invalid msgid: ${msgid}`
+
+    state = createState @ pkt, sink, () => by_msgid.delete(msgid)
+    by_msgid.set @ msgid, state
+  return state
+

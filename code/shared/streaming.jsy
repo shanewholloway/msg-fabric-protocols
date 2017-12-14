@@ -2,7 +2,7 @@ export default function(packetParser, shared) ::
   return @{} createStream
 
 
-  function createStream(pkt, sink, msgid) ::
+  function createStream(pkt, sink, deleteState) ::
     let next=0, fin = false, recvData, rstream
     const state = @{} feed: feed_init, info: pkt.info
     return state
@@ -52,7 +52,7 @@ export default function(packetParser, shared) ::
           return // in order
       else ::
         fin = true
-        sink.deleteStateFor(msgid)
+        deleteState()
         if next === -seq ::
           next = 'done'
           return // in-order, last packet
