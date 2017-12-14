@@ -1,0 +1,18 @@
+export * from './framing.jsy'
+export * from './multipart.jsy'
+export * from './streaming.jsy'
+export * from './transport.jsy'
+
+import multipart from './multipart.jsy'
+import streaming from './streaming.jsy'
+import transport from './transport.jsy'
+
+export default function init_shared(packetParser, options) ::
+  const shared = Object.assign @ {packetParser}, options
+
+  Object.assign @ shared,
+    multipart @ packetParser, shared
+    streaming @ packetParser, shared
+    transport @ packetParser, shared
+
+  return shared

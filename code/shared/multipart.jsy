@@ -1,0 +1,23 @@
+export default function(packetParser, shared) ::
+  const {concatBuffers} = packetParser
+  return @{} createMultipart
+
+
+  function createMultipart(pkt, sink, msgid) ::
+    let parts = [], fin = false
+    return @{} feed, info: pkt.info
+
+    function feed(pkt) ::
+      let seq = pkt.info.seq
+      if seq < 0 :: fin = true; seq = -seq
+      parts[seq-1] = pkt.body_buffer()
+
+      if ! fin :: return
+      if parts.includes @ undefined :: return
+
+      sink.deleteStateFor(msgid)
+
+      const res = concatBuffers(parts)
+      parts = null
+      return res
+

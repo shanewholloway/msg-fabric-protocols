@@ -1,0 +1,151 @@
+import framings from './framing.jsy'
+
+export default function(packetParser, shared) ::
+  const {packPacketObj} = packetParser
+  const {random_id, json_pack} = shared
+  const {choose: chooseFraming} = framings
+
+  const fragment_size = Number @ shared.fragment_size || 8000
+  if 1024 > fragment_size || 65000 < fragment_size ::
+    throw new Error @ `Invalid fragment size: ${fragment_size}`
+
+  return @{} bindTransports, packetFragments, chooseFraming
+
+
+  function bindTransports(inbound, highbits, transports) ::
+    const packBody = transports.packBody
+    const outbound = bindTransportImpls(inbound, highbits, transports)
+
+    if transports.streaming ::
+      return @{} send, stream: bindStream()
+
+    return @{} send
+
+
+
+    function send(chan, obj, body) ::
+      body = packBody(body)
+      if fragment_size < body.byteLength ::
+        if ! obj.token :: obj.token = random_id()
+        obj.transport = 'multipart'
+        const msend = msend_bytes(chan, obj)
+        return msend @ true, body
+
+      obj.transport = 'single'
+      obj.body = body
+      const pack_hdr = outbound.choose(obj)
+      const pkt = packPacketObj @ pack_hdr(obj)
+      return chan @ pkt
+
+
+    function msend_bytes(chan, obj, msg) ::
+      const pack_hdr = outbound.choose(obj)
+      let {next} = pack_hdr(obj)
+      if null !== msg ::
+        obj.body = msg
+        const pkt = packPacketObj @ obj
+        chan @ pkt
+
+      return async function (fin, body) ::
+        if null === next ::
+          throw new Error @ 'Write after end'
+        let res
+        for const obj of packetFragments @ body, next, fin ::
+          const pkt = packPacketObj @ obj
+          res = await chan @ pkt
+        if fin :: next = null
+        return res
+
+
+    function msend_objects(chan, obj, msg) ::
+      const pack_hdr = outbound.choose(obj)
+      let {next} = pack_hdr(obj)
+      if null !== msg ::
+        obj.body = msg
+        const pkt = packPacketObj @ obj
+        chan @ pkt
+
+      return function (fin, body) ::
+        if null === next ::
+          throw new Error @ 'Write after end'
+        const obj = next({fin})
+        obj.body = body
+        const pkt = packPacketObj @ obj
+        if fin :: next = null
+        return chan @ pkt
+
+
+    function bindStream() ::
+      const {mode} = transports.streaming
+      const msend_impl = {object: msend_objects, bytes: msend_bytes}[mode]
+      if msend_impl :: return stream
+
+      function stream(chan, obj, msg) ::
+        if ! obj.token :: obj.token = random_id()
+        obj.transport = 'streaming'
+        const msend = msend_impl @ chan, obj, json_pack(msg)
+        write.write = write; write.end = write.bind(true)
+        return write
+
+        function write(chunk) ::
+          return chunk != null
+            ? msend @ true===this, packBody(chunk)
+            : msend @ true
+
+
+  function * packetFragments(buf, next_hdr, fin) ::
+    if null == buf ::
+      const obj = next_hdr({fin})
+      yield obj
+      return
+
+    let i = 0, lastInner = buf.byteLength - fragment_size;
+    while i < lastInner ::
+      const i0 = i
+      i += fragment_size
+
+      const obj = next_hdr()
+      obj.body = buf.slice(i0, i)
+      yield obj
+
+    ::
+      const obj = next_hdr({fin})
+      obj.body = buf.slice(i)
+      yield obj
+
+
+
+
+// module-level helper functions
+
+function bindTransportImpls(inbound, highbits, transports) ::
+  const outbound = []
+  outbound.choose = framings.choose
+
+  for const frame of framings ::
+    const impl = frame ? transports[frame.transport] : null
+    if ! impl :: continue
+
+    const {bits, pack, unpack} = frame
+    const pkt_type = highbits | bits
+    const {t_recv} = impl
+
+    function pack_hdr(obj) ::
+      pack(pkt_type, obj)
+      return obj
+
+    function recv_msg(pkt, sink) ::
+      unpack(pkt)
+      return t_recv(pkt, sink)
+
+    pack_hdr.pkt_type = recv_msg.pkt_type = pkt_type
+    outbound[bits] = pack_hdr
+    inbound[pkt_type] = recv_msg
+
+    if 'production' !== process.env.NODE_ENV ::
+      const op = pack_hdr.op = recv_msg.op = frame.op
+      Object.defineProperty @ pack_hdr, 'name', @{} value: `pack_hdr «${op}»`
+      Object.defineProperty @ recv_msg, 'name', @{} value: `recv_msg «${op}»`
+
+  return outbound
+

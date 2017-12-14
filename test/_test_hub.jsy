@@ -1,0 +1,7 @@
+import Hub from 'msg-fabric-core'
+import {protocols_nodejs as protocols} from '../dist'
+import router_plugin from 'msg-fabric-core/dist/plugin-router-node'
+
+export default Hub.plugin @
+  protocols()
+  router_plugin()

@@ -1,0 +1,17 @@
+import plugin from './plugin.jsy'
+
+const getRandomValues = 'undefined' !== typeof window
+  ? window.crypto.getRandomValues : null
+
+protocols_browser.random_id = random_id
+function random_id() ::
+  const arr = new Int32Array(1)
+  getRandomValues(arr)
+  return arr[0]
+
+export default function protocols_browser(plugin_options={}) ::
+  if null == plugin_options.random_id ::
+    plugin_options.random_id = random_id
+
+  return plugin(plugin_options)
+

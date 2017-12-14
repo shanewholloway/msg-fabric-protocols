@@ -1,0 +1,47 @@
+{
+  "name": "msg-fabric-protocols",
+  "version": "0.0.0",
+  "description": "Protocols for msg-fabric-core and msg-fabric-endpoint",
+  "license": "BSD-2-Clause",
+  "author": "Shane Holloway <shane.holloway@ieee.org>",
+  "homepage": "https://github.com/shanewholloway/msg-fabric-protocols#readme",
+  "bugs": {
+    "url": "https://github.com/shanewholloway/msg-fabric-protocols/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/shanewholloway/msg-fabric-protocols.git"
+  },
+  "keywords": [
+    "ecosystem:msg-fabric"
+  ],
+  "files": [
+    "dist/",
+    "code/",
+    "test/"
+  ],
+  "main": "dist/index",
+  "module": "dist/index.mjs",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-jsy": "^0.9.4",
+    "msg-fabric-core": "github:shanewholloway/msg-fabric-core",
+    "msg-fabric-packet-stream": "github:shanewholloway/msg-fabric-packet-stream",
+    "rollup": "^0.52.1",
+    "rollup-plugin-babel": "^3.0.2",
+    "rollup-plugin-replace": "^2.0.0"
+  },
+  "babel": {
+    "presets": "jsy/lean"
+  },
+  "scripts": {
+    "clean": "rm -rf ./dist/*",
+    "build": "rollup --config",
+    "watch": "npm -s run build -- --watch",
+    "demo": "babel-node --extensions .js,.jsy test/playground.jsy",
+    "demo:build": "babel -s inline -x .js,.jsy test -d dist-test ",
+    "demo:watch": "npm -s run test:build -- --watch",
+    "pretest": "npm -s run build",
+    "test": "true"
+  }
+}

@@ -1,0 +1,48 @@
+import init_shared from './shared/index.jsy'
+import json_proto from './protocols/json.jsy'
+import binary_proto from './protocols/binary.jsy'
+import control_proto from './protocols/control.jsy'
+
+
+const default_plugin_options = @:
+  json_pack: JSON.stringify
+  custom(protocols) :: return protocols
+
+
+export default function(plugin_options) ::
+  plugin_options = Object.assign @ {}, default_plugin_options, plugin_options
+  const { plugin_name, random_id, json_pack } = plugin_options
+
+  return @: subclass, order: -1 // dependent on router plugin's (-2) providing packetParser
+  
+  function subclass(FabricHub_PI, bases) ::
+    const {packetParser} = FabricHub_PI.prototype
+    if null==packetParser || ! packetParser.isPacketParser() ::
+      throw new TypeError @ `Invalid packetParser for plugin`
+    
+    const protocols = plugin_options.custom @
+      init_protocols @ packetParser, @{} random_id, json_pack
+
+    FabricHub_PI.prototype.protocols = protocols
+
+
+export function init_protocols(packetParser, options) ::
+  const shared = init_shared @ packetParser, options
+
+  const inbound = []
+  const json = shared.bindTransports @ inbound
+    0x00 // 0x0* — JSON body
+    json_proto(shared)
+
+  const binary = shared.bindTransports @ inbound
+    0x10 // 0x1* — binary body
+    binary_proto(shared)
+
+  const control = control_proto @ inbound,
+    0xf0 // 0xf* — control
+    shared
+
+  const codecs = @: json, binary, control, default: json
+
+  return @{} inbound, codecs, shared, random_id: shared.random_id
+

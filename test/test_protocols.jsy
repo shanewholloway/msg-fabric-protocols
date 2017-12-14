@@ -1,0 +1,5 @@
+import TestHub from './_test_hub.jsy'
+
+const hub = new TestHub()
+if ! hub.protocols ::
+  throw new Error @ "PROBLEM"
