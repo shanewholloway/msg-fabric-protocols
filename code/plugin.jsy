@@ -5,6 +5,7 @@ import control_protocol from './protocols/control.jsy'
 
 
 const default_plugin_options = @:
+  useStandard: true
   json_pack: JSON.stringify
   custom(protocols) :: return protocols
 
@@ -20,29 +21,30 @@ export default function(plugin_options) ::
     if null==packetParser || ! packetParser.isPacketParser() ::
       throw new TypeError @ `Invalid packetParser for plugin`
     
-    const protocols = plugin_options.custom @
-      init_protocols @ packetParser, @{} random_id, json_pack
 
+    const shared = init_shared @ packetParser, @{} random_id, json_pack
+    let protocols = @{} shared, random_id, inbound: [], codecs: Object.create(null), 
+
+    if plugin_options.useStandard ::
+      protocols = init_protocols @ protocols
+
+    protocols = plugin_options.custom @ protocols
     FabricHub_PI.prototype.protocols = protocols
 
 
-export function init_protocols(packetParser, options) ::
-  const shared = init_shared @ packetParser, options
+export function init_protocols(protocols) ::
+  const {inbound, codecs, shared} = protocols
 
-  const inbound = []
-  const json = shared.bindTransports @ inbound
-    0x00 // 0x0* — JSON body
-    json_protocol(shared)
+  codecs.default = codecs.json = @
+    shared.bindTransports @ // 0x0* — JSON body
+      inbound, 0x00, json_protocol(shared)
 
-  const binary = shared.bindTransports @ inbound
-    0x10 // 0x1* — binary body
-    binary_protocol(shared)
+  codecs.binary = @
+    shared.bindTransports @ // 0x1* — binary body
+      inbound, 0x10, binary_protocol(shared)
 
-  const control = control_protocol @ inbound,
-    0xf0 // 0xf* — control
-    shared
+  codecs.control = @ // 0xf* — control
+    control_protocol @ inbound, 0xf0, shared
 
-  const codecs = @: json, binary, control, default: json
-
-  return @{} inbound, codecs, shared, random_id: shared.random_id
+  return protocols
 
