@@ -24,7 +24,7 @@ export default function(packetParser, shared) ::
 
 
     function send(chan, obj, body) ::
-      body = packBody(body)
+      body = packBody(body, obj)
       if fragment_size < body.byteLength ::
         if ! obj.token :: obj.token = random_id()
         obj.transport = 'multipart'
@@ -88,8 +88,9 @@ export default function(packetParser, shared) ::
         return write
 
         function write(chunk) ::
+          // msend @ fin, body
           return chunk != null
-            ? msend @ true===this, packBody(chunk)
+            ? msend @ true===this, packBody(chunk, obj)
             : msend @ true
 
 

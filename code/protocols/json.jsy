@@ -1,4 +1,8 @@
-export default function json_protocol(shared) ::
+const noop_encodings = @{}
+  encode(obj, buf) :: return buf
+  decode(sink, buf) :: return buf
+
+export default function json_protocol(shared, {encode, decode}=noop_encodings) ::
   const {stateFor, createMultipart, createStream, json_pack} = shared
   const {pack_utf8, unpack_utf8} = shared.packetParser
 
@@ -8,7 +12,8 @@ export default function json_protocol(shared) ::
     get datagram() :: return this.direct
     direct: @{}
       t_recv(pkt, sink) ::
-        const msg = sink.json_unpack @ pkt.body_utf8() || undefined
+        const json_buf = decode @ sink, pkt.body_buffer()
+        const msg = unpackBodyBuf @ json_buf, sink
         return sink.recvMsg @ msg, pkt.info
 
     multipart: @{}
@@ -16,17 +21,24 @@ export default function json_protocol(shared) ::
         const state = stateFor @ pkt, sink, createMultipart
         const body_buf = state.feed(pkt)
         if undefined !== body_buf ::
-          const msg = sink.json_unpack @ unpack_utf8(body_buf) || undefined
+          const json_buf = decode @ sink, body_buf
+          const msg = unpackBodyBuf @ json_buf, sink
           return sink.recvMsg @ msg, state.info
 
     streaming: @{}
       mode: 'object'
       t_recv(pkt, sink) ::
         const state = stateFor @ pkt, sink, createStream
-        return state.feed(pkt, unpackBody)
+        return state.feed(pkt, as_json_content)
 
-  function packBody(body) ::
-    return pack_utf8 @ json_pack(body)
+  function packBody(body, obj) ::
+    const body_buf = pack_utf8 @ json_pack @ body
+    return encode(obj, body_buf)
 
-  function unpackBody(pkt, sink) ::
-    return sink.json_unpack @ pkt.body_utf8()
+  function as_json_content(pkt, sink) ::
+    return unpackBodyBuf @ pkt.body_buffer(), sink, null
+
+  function unpackBodyBuf(body_buf, sink, ifAbsent) ::
+    const json_buf = decode(sink, body_buf)
+    return sink.json_unpack @ json_buf ? unpack_utf8(json_buf) : ifAbsent
+
