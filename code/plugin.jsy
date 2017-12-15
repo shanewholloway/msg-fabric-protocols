@@ -1,7 +1,7 @@
 import init_shared from './shared/index.jsy'
-import json_proto from './protocols/json.jsy'
-import binary_proto from './protocols/binary.jsy'
-import control_proto from './protocols/control.jsy'
+import json_protocol from './protocols/json.jsy'
+import binary_protocol from './protocols/binary.jsy'
+import control_protocol from './protocols/control.jsy'
 
 
 const default_plugin_options = @:
@@ -32,13 +32,13 @@ export function init_protocols(packetParser, options) ::
   const inbound = []
   const json = shared.bindTransports @ inbound
     0x00 // 0x0* — JSON body
-    json_proto(shared)
+    json_protocol(shared)
 
   const binary = shared.bindTransports @ inbound
     0x10 // 0x1* — binary body
-    binary_proto(shared)
+    binary_protocol(shared)
 
-  const control = control_proto @ inbound,
+  const control = control_protocol @ inbound,
     0xf0 // 0xf* — control
     shared
 

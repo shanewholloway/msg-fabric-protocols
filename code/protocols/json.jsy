@@ -2,7 +2,8 @@ const noop_encodings = @{}
   encode(obj, buf) :: return buf
   decode(sink, buf) :: return buf
 
-export default function json_protocol(shared, {encode, decode}=noop_encodings) ::
+export default json_protocol
+export function json_protocol(shared, {encode, decode}=noop_encodings) ::
   const {stateFor, createMultipart, createStream, json_pack} = shared
   const {pack_utf8, unpack_utf8} = shared.packetParser
 

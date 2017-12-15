@@ -2,7 +2,8 @@ const noop_encodings = @{}
   encode(obj, buf) :: return buf
   decode(sink, buf) :: return buf
 
-export default function binary_protocol(shared, {encode, decode}=noop_encodings) ::
+export default binary_protocol
+export function binary_protocol(shared, {encode, decode}=noop_encodings) ::
   const {stateFor, createMultipart, createStream} = shared
   const {asBuffer} = shared.packetParser
 
