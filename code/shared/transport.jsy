@@ -76,14 +76,17 @@ export default function(packetParser, shared) ::
 
 
     function bindStream() ::
-      const {mode} = transports.streaming
+      const {mode, msg_pack} = transports.streaming
       const msend_impl = {object: msend_objects, bytes: msend_bytes}[mode]
       if msend_impl :: return stream
 
       function stream(chan, obj, msg) ::
         if ! obj.token :: obj.token = random_id()
         obj.transport = 'streaming'
-        const msend = msend_impl @ chan, obj, json_pack(msg)
+        msg = msg_pack
+          ? msg_pack(msg, obj, chan)
+          : json_pack(msg)
+        const msend = msend_impl @ chan, obj, msg
         write.write = write; write.end = write.bind(true)
         return write
 

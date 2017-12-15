@@ -7,11 +7,13 @@ export default function(packetParser, shared) ::
     const state = @{} feed: feed_init, info: pkt.info
     return state
 
-    function feed_init(pkt, as_content) ::
+    function feed_init(pkt, as_content, msg_unpack) ::
       state.feed = feed_ignore
 
       const info = pkt.info
-      const msg = sink.json_unpack @ pkt.body_utf8()
+      const msg = msg_unpack
+        ? msg_unpack(pkt, sink)
+        : sink.json_unpack @ pkt.body_utf8()
       rstream = sink.recvStream(msg, info)
       if null == rstream :: return
       check_fns @ rstream, 'on_error', 'on_data', 'on_end' 
