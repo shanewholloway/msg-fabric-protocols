@@ -1,3 +1,7 @@
+
+const abstract_chan_interface = @{}
+  send(pkt) ::
+
 const abstract_sink_interface = @{}
   by_msgid: new Map()
 

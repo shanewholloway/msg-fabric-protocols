@@ -1,6 +1,6 @@
 const noop_encodings = @{}
-  encode(obj, buf) :: return buf
-  decode(sink, buf) :: return buf
+  encode(buf, obj, chan) :: return buf
+  decode(buf, sink) :: return buf
 
 export default json_protocol
 export function json_protocol(shared, {encode, decode}=noop_encodings) ::
@@ -32,14 +32,14 @@ export function json_protocol(shared, {encode, decode}=noop_encodings) ::
         const state = stateFor @ pkt, sink, createStream
         return state.feed(pkt, as_json_content)
 
-  function packBody(body, obj) ::
+  function packBody(body, obj, chan) ::
     const body_buf = pack_utf8 @ json_pack @ body
-    return encode(obj, body_buf)
+    return encode(body_buf, obj, chan)
 
   function as_json_content(pkt, sink) ::
     return unpackBodyBuf @ pkt.body_buffer(), sink, null
 
   function unpackBodyBuf(body_buf, sink, ifAbsent) ::
-    const json_buf = decode(sink, body_buf)
+    const json_buf = decode(body_buf, sink)
     return sink.json_unpack @ json_buf ? unpack_utf8(json_buf) : ifAbsent
 

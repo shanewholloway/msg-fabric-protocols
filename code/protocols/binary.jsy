@@ -1,6 +1,6 @@
 const noop_encodings = @{}
-  encode(obj, buf) :: return buf
-  decode(sink, buf) :: return buf
+  encode(buf, obj, chan) :: return buf
+  decode(buf, sink) :: return buf
 
 export default binary_protocol
 export function binary_protocol(shared, {encode, decode}=noop_encodings) ::
@@ -34,11 +34,11 @@ export function binary_protocol(shared, {encode, decode}=noop_encodings) ::
           const msg = unpackBodyBuf @ body_buf, sink
           return sink.recvMsg @ msg, state.info
 
-  function packBody(body, obj) ::
+  function packBody(body, obj, chan) ::
     const body_buf = asBuffer @ body
-    return encode(obj, body_buf)
+    return encode(body_buf, obj, chan)
   function unpackBodyBuf(body_buf, sink) ::
-    return decode(sink, body_buf)
+    return decode(body_buf, sink)
 
 function pkt_buffer(pkt) :: return pkt.body_buffer()
 

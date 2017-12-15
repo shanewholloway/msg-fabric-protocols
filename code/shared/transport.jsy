@@ -24,7 +24,7 @@ export default function(packetParser, shared) ::
 
 
     function send(chan, obj, body) ::
-      body = packBody(body, obj)
+      body = packBody(body, obj, chan)
       if fragment_size < body.byteLength ::
         if ! obj.token :: obj.token = random_id()
         obj.transport = 'multipart'
@@ -35,7 +35,7 @@ export default function(packetParser, shared) ::
       obj.body = body
       const pack_hdr = outbound.choose(obj)
       const pkt = packPacketObj @ pack_hdr(obj)
-      return chan @ pkt
+      return chan.send @ pkt
 
 
     function msend_bytes(chan, obj, msg) ::
@@ -44,7 +44,7 @@ export default function(packetParser, shared) ::
       if null !== msg ::
         obj.body = msg
         const pkt = packPacketObj @ obj
-        chan @ pkt
+        chan.send @ pkt
 
       return async function (fin, body) ::
         if null === next ::
@@ -52,7 +52,7 @@ export default function(packetParser, shared) ::
         let res
         for const obj of packetFragments @ body, next, fin ::
           const pkt = packPacketObj @ obj
-          res = await chan @ pkt
+          res = await chan.send @ pkt
         if fin :: next = null
         return res
 
@@ -63,7 +63,7 @@ export default function(packetParser, shared) ::
       if null !== msg ::
         obj.body = msg
         const pkt = packPacketObj @ obj
-        chan @ pkt
+        chan.send @ pkt
 
       return function (fin, body) ::
         if null === next ::
@@ -72,7 +72,7 @@ export default function(packetParser, shared) ::
         obj.body = body
         const pkt = packPacketObj @ obj
         if fin :: next = null
-        return chan @ pkt
+        return chan.send @ pkt
 
 
     function bindStream() ::
@@ -90,7 +90,7 @@ export default function(packetParser, shared) ::
         function write(chunk) ::
           // msend @ fin, body
           return chunk != null
-            ? msend @ true===this, packBody(chunk, obj)
+            ? msend @ true===this, packBody(chunk, obj, chan)
             : msend @ true
 
 
