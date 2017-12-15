@@ -20,7 +20,7 @@ export function control_protocol(inbound, high, shared) ::
       op: 'ping', ts0: new Date()
     ping_frame.pack(ping_type, obj)
     const pkt = packPacketObj @ obj
-    return chan @ pkt
+    return chan.send @ pkt
 
   function recv_ping(pkt, sink, router) ::
     ping_frame.unpack(pkt)

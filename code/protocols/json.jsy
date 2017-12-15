@@ -13,7 +13,7 @@ export function json_protocol(shared, {encode, decode}=noop_encodings) ::
     get datagram() :: return this.direct
     direct: @{}
       t_recv(pkt, sink) ::
-        const json_buf = decode @ sink, pkt.body_buffer()
+        const json_buf = decode @ pkt.body_buffer(), sink
         const msg = unpackBodyBuf @ json_buf, sink
         return sink.recvMsg @ msg, pkt.info
 
@@ -22,7 +22,7 @@ export function json_protocol(shared, {encode, decode}=noop_encodings) ::
         const state = stateFor @ pkt, sink, createMultipart
         const body_buf = state.feed(pkt)
         if undefined !== body_buf ::
-          const json_buf = decode @ sink, body_buf
+          const json_buf = decode @ body_buf, sink
           const msg = unpackBodyBuf @ json_buf, sink
           return sink.recvMsg @ msg, state.info
 
