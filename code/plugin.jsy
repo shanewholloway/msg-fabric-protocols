@@ -5,6 +5,7 @@ import control_protocol from './protocols/control.jsy'
 
 
 const default_plugin_options = @:
+  plugin_name: 'protocols'
   useStandard: true
   json_pack: JSON.stringify
   custom(protocols) :: return protocols
@@ -29,7 +30,7 @@ export default function(plugin_options) ::
       protocols = init_protocols @ protocols
 
     protocols = plugin_options.custom @ protocols
-    FabricHub_PI.prototype.protocols = protocols
+    FabricHub_PI.prototype[plugin_name] = protocols
 
 
 export function init_protocols(protocols) ::
