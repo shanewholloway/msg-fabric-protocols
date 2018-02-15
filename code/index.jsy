@@ -5,7 +5,5 @@ export {default as binary_protocol} from './protocols/binary.jsy'
 export {default as control_protocol} from './protocols/control.jsy'
 export * from './plugin.jsy'
 
-export {default as protocols_nodejs} from './index.nodejs.jsy'
-export {default as protocols_browser} from './index.browser.jsy'
 export {default as default, default as protocols} from './plugin.jsy'
 
